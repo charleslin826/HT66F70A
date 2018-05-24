@@ -1,0 +1,173 @@
+				;file C:\Users\YVTC\Desktop\單晶片微控制器(一)\0209\LAB02_70A\Lab02_10.c
+				;1	//Lab02_10    
+				;2	/*   Basic C Program 
+				;3	     switch case Demo*/
+				;4	#include <HT66F70A.h>					     
+				;5	#include "MyType.h"
+				;6	#define LED_Port	_pc					//Port C Data Register
+				;7	#define LED_PortC	_pcc				//Port C Control Register		
+				;8	void main()
+				;9	{	u8 x=0;
+				@code .SECTION 'CODE'
+				include HT66F70A.inc
+0000	1F0B	clr     BP
+0001	2802	jmp     _main_startup1
+				@start .SECTION 'CODE'
+				_main_startup1:
+				@start .SECTION 'CODE'
+0002	0F00	mov     a, 0H
+0003	008B	mov     BP, a
+0004	2813	jmp     _main
+0005	0000	nop
+0006	0000	nop
+0007	0000	nop
+0008	0000	nop
+				L0009:
+0009	0000	nop
+				L000A:
+000A	0000	nop
+000B	1785	sdz     ACC
+000C	280A	jmp     L000A
+				L000D:
+000D	0000	nop
+000E	1785	sdz     ACC
+000F	280D	jmp     L000D
+0010	5782	sdz     rb[1]
+0011	280D	jmp     L000D
+0012	0003	ret
+				_main:
+				_main:
+0013	5F03	clr     x[0]
+				;10		_wdtc=0b10101111;
+0014	0FAF	mov     a, AFH
+0015	00BE	mov     WDTC, a
+				;11		LED_Port=0; LED_PortC=0;   //0000 0000全亮  設定PCC方向
+0016	1F1A	clr     PC
+0017	1F1B	clr     PCC
+				;12		while(1)
+				;13		{	switch (x)
+				_L12:
+0018	4703	mov     a, x[0]
+0019	4080	mov     ra, a
+001A	5F01	clr     rb
+001B	4700	mov     a, ra
+001C	0C01	xor     a, 1H
+001D	4501	or      a, rb
+001E	3D0A	sz      Z
+001F	2844	jmp     _L3
+0020	4700	mov     a, ra
+0021	0C02	xor     a, 2H
+0022	4501	or      a, rb
+0023	3D0A	sz      Z
+0024	2847	jmp     _L4
+0025	4700	mov     a, ra
+0026	0C03	xor     a, 3H
+0027	4501	or      a, rb
+0028	3D0A	sz      Z
+0029	284A	jmp     _L5
+002A	4700	mov     a, ra
+002B	0C04	xor     a, 4H
+002C	4501	or      a, rb
+002D	3D0A	sz      Z
+002E	284D	jmp     _L6
+002F	4700	mov     a, ra
+0030	0C05	xor     a, 5H
+0031	4501	or      a, rb
+0032	3D0A	sz      Z
+0033	2850	jmp     _L7
+0034	4700	mov     a, ra
+0035	0C06	xor     a, 6H
+0036	4501	or      a, rb
+0037	3D0A	sz      Z
+0038	2853	jmp     _L8
+0039	4700	mov     a, ra
+003A	0C07	xor     a, 7H
+003B	4501	or      a, rb
+003C	3D0A	sz      Z
+003D	2856	jmp     _L9
+003E	4700	mov     a, ra
+003F	0C08	xor     a, 8H
+0040	4501	or      a, rb
+0041	3D0A	sz      Z
+0042	2859	jmp     _L10
+0043	285C	jmp     _L13
+				;14			{	case 1: LED_Port=~0x01; // ( ~是取反向/補數的意思  就是0000 0000 變成 1111 1111 )(!是邏輯反向 真變假 假變真) 
+				_L3:
+0044	0FFE	mov     a, FEH
+0045	009A	mov     PC, a
+				;15			/*   ~0x01  = 0000 0001取反向 = 1111 1110 >>>只亮第1顆 */
+				;16						break;
+0046	285D	jmp     _L11
+				;17				case 2: LED_Port=~0x02;
+				_L4:
+0047	0FFD	mov     a, FDH
+0048	009A	mov     PC, a
+				;18			/*   ~0x02  = 0000 0010取反向 = 1111 1101>>>只亮第2顆 */
+				;19						break;					
+0049	285D	jmp     _L11
+				;20				case 3: LED_Port=~0x04;
+				_L5:
+004A	0FFB	mov     a, FBH
+004B	009A	mov     PC, a
+				;21			/*   ~0x04  = 0000 0100取反向 = 1111 1011>>>只亮第3顆 */
+				;22						break;
+004C	285D	jmp     _L11
+				;23				case 4: LED_Port=~(1<<3);	//將1左移三位元
+				_L6:
+004D	0FF7	mov     a, F7H
+004E	009A	mov     PC, a
+				;24			/*   ~0x04  = 0000 0001左移三位元 = 1111 0111>>>只亮第4顆 */
+				;25						break;
+004F	285D	jmp     _L11
+				;26				case 5: LED_Port=~(1<<4);
+				_L7:
+0050	0FEF	mov     a, EFH
+0051	009A	mov     PC, a
+				;27						break;
+0052	285D	jmp     _L11
+				;28				case 6: LED_Port=~(1<<5);
+				_L8:
+0053	0FDF	mov     a, DFH
+0054	009A	mov     PC, a
+				;29						break;
+0055	285D	jmp     _L11
+				;30				case 7: LED_Port=~(1<<6);
+				_L9:
+0056	0FBF	mov     a, BFH
+0057	009A	mov     PC, a
+				;31						break;
+0058	285D	jmp     _L11
+				;32				case 8: LED_Port=~(1<<7);
+				_L10:
+0059	0F7F	mov     a, 7FH
+005A	009A	mov     PC, a
+				;33						break;
+005B	285D	jmp     _L11
+				;34				default:					//x!=1~8時執行本段
+				;35						x=0;
+				_L13:
+005C	5F03	clr     x[0]
+				;36			}
+				;37			x+=1;
+				_L11:
+005D	5483	inc     x[0]
+				;38			GCC_DELAY(263690);		//延遲80000個指令週期 此為盛群自定義的 可看build-in.h
+005E	0F00	mov     a, 0H
+005F	4082	mov     rb[1], a
+0060	0F00	mov     a, 0H
+0061	340B	clr     BP0
+0062	348B	clr     BP1
+0063	2009	call    L0009
+0064	348B	clr     BP1
+0065	340B	clr     BP0
+				;39		}
+0066	2818	jmp     _L12
+0067	2867	jmp     $
+				;40	}	
+				data .SECTION 'DATA'
+				__pc DB DUP (?) ; __pc
+				__pcc DB DUP (?) ; __pcc
+				__wdtc DB DUP (?) ; __wdtc
+				ra DB DUP (?)
+				rb DB DUP (?)
+				x DB DUP (?) ; x

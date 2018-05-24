@@ -1,0 +1,78 @@
+				;file C:\Users\YVTC\Desktop\單晶片微控制器(一)\0206 0209\0206_HT66F70A\SUM1To1000.ASM
+				;1	; PROGRAM : SUM1To1000.ASM      	By Steven                    
+				;2	; FUNCTION: BCD DEMO PROGRAM      	2017.0512   
+				;3	; ANS=500500(Dec) ==> 73A14 (Hex)  		  
+				;4	#INCLUDE    HT66F70A.INC 
+				;5	;=================================================================================
+				;6	MY_DATA    .SECTION		'DATA'    	;== DATA SECTION == 
+				;7	SUM    	DB   	3 DUP	(?)  
+				;8	X		DB   	2 DUP	(?) 
+				;9	L1    	DB      ?
+				;10	L2		DB 		?                 	
+				;11	;========================================================================================
+				;12	MY_CODE    .SECTION	 at 0	'CODE' 	;== PROGRAM SECTION == 
+				;13			MOV		A,0AFh				;DISABLE WDT
+				MY_CODE:
+				include HT66F70A.inc
+0000	0FAF	mov     a, AFH
+				;14			MOV		WDTC,A
+0001	00BE	mov     WDTC, a
+				;15			CLR		SUM[0]
+0002	5F00	clr     SUM
+				;16			CLR		SUM[1]
+0003	5F01	clr     SUM[1]
+				;17			CLR		SUM[2] ;15-17 先清除三個byte
+0004	5F02	clr     SUM[2]
+				;18			MOV		A,1	
+0005	0F01	mov     a, 1H
+				;19			MOV		X[0],A  ;存放1
+0006	4083	mov     X, a
+				;20			CLR		X[1]	
+0007	5F04	clr     X[1]
+				;21			MOV		A,10
+0008	0F0A	mov     a, AH
+				;22			MOV		L1,A	;相加 內層相加10次
+0009	4085	mov     L1, a
+				;23	LOOP1:		
+				;24			MOV		A,100	;外層 相加一百次 結果是1000
+				LOOP1:
+000A	0F64	mov     a, 64H
+				;25			MOV		L2,A
+000B	4086	mov     L2, a
+				;26	LOOP:		
+				;27			MOV		A,X[0]	
+				LOOP:
+000C	4703	mov     a, X
+				;28			ADDM	A,SUM[0]	
+000D	4380	addm    a, SUM
+				;29			MOV		A,X[1]
+000E	4704	mov     a, X[1]
+				;30			ADCM	A,SUM[1] ;進位時放到高八位元
+000F	5381	adcm    a, SUM[1]
+				;31			CLR		ACC
+0010	1F05	clr     ACC
+				;32			ADCM	A,SUM[2]
+0011	5382	adcm    a, SUM[2]
+				;33			MOV		A,1
+0012	0F01	mov     a, 1H
+				;34			ADDM	A,X[0]
+0013	4383	addm    a, X
+				;35			CLR		ACC
+0014	1F05	clr     ACC
+				;36			ADCM	A,X[1]
+0015	5384	adcm    a, X[1]
+				;37			SDZ		L2
+0016	5786	sdz     L2
+				;38			JMP		LOOP
+0017	280C	jmp     LOOP
+				;39			SDZ		L1
+0018	5785	sdz     L1
+				;40			JMP		LOOP1
+0019	280A	jmp     LOOP1
+				;41			JMP		$
+001A	281A	jmp     $
+				data .SECTION 'DATA'
+				SUM DB DUP (?) ; SUM
+				X DB DUP (?) ; X
+				L1 DB DUP (?)
+				L2 DB DUP (?)

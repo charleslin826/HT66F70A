@@ -1,0 +1,1196 @@
+				;file C:\Users\YVTC\Desktop\單晶片微控制器(一)\0522\ADCWithCal.c
+				;1	// PROGRAM	: ADC12WithCal.c					2017.0601
+				;2	// FUNCTION	: ADC VBG Calibration 				By Steven
+				;3	#include <HT66F70A.h>
+				;4	#include "MyType.h"
+				;5	const u16 VBG=1250;								//Babgap Voltage 1.25V
+0010	0004	reti
+				L0011:
+0011	5F0F	clr     xSize
+0012	5F10	clr     y
+0013	5F11	clr     ySize
+0014	5F12	clr     color
+0015	0F20	mov     a, 20H
+0016	4094	mov     Buffer, a
+				L0017:
+0017	340A	clr     C
+0018	5A87	rlc     I2CData
+0019	5A88	rlc     del
+001A	5A89	rlc     ptr
+001B	5A8A	rlc     Length
+001C	5A8F	rlc     xSize
+001D	5A90	rlc     y
+001E	5A91	rlc     ySize
+001F	5A92	rlc     color
+0020	470F	mov     a, xSize
+0021	420B	sub     a, Length[1]
+0022	4710	mov     a, y
+0023	520C	sbc     a, Length[2]
+0024	4711	mov     a, ySize
+0025	520D	sbc     a, Length[3]
+0026	4712	mov     a, color
+0027	520E	sbc     a, Length[4]
+0028	380A	snz     C
+0029	2837	jmp     L0037
+002A	470F	mov     a, xSize
+002B	420B	sub     a, Length[1]
+002C	408F	mov     xSize, a
+002D	4710	mov     a, y
+002E	520C	sbc     a, Length[2]
+002F	4090	mov     y, a
+0030	4711	mov     a, ySize
+0031	520D	sbc     a, Length[3]
+0032	4091	mov     ySize, a
+0033	4712	mov     a, color
+0034	520E	sbc     a, Length[4]
+0035	4092	mov     color, a
+0036	5487	inc     I2CData
+				L0037:
+0037	5794	sdz     Buffer
+0038	2817	jmp     L0017
+0039	7813	snz     color[1].0
+003A	2846	jmp     L0046
+003B	418F	cpl     xSize
+003C	4190	cpl     y
+003D	4191	cpl     ySize
+003E	4192	cpl     color
+003F	548F	inc     xSize
+0040	3D0A	sz      Z
+0041	5490	inc     y
+0042	3D0A	sz      Z
+				L0043:
+0043	5491	inc     ySize
+0044	3D0A	sz      Z
+0045	5492	inc     color
+				L0046:
+0046	7893	snz     color[1].1
+				L0047:
+0047	2853	jmp     L0053
+0048	4187	cpl     I2CData
+0049	4188	cpl     del
+004A	4189	cpl     ptr
+004B	418A	cpl     Length
+004C	5487	inc     I2CData
+004D	3D0A	sz      Z
+004E	5488	inc     del
+004F	3D0A	sz      Z
+0050	5489	inc     ptr
+0051	3D0A	sz      Z
+0052	548A	inc     Length
+				L0053:
+0053	0003	ret
+				L0054:
+0054	5F0F	clr     xSize
+0055	5F10	clr     y
+0056	5F11	clr     ySize
+0057	5F12	clr     color
+				L0058:
+0058	780B	snz     Length[1].0
+0059	2862	jmp     L0062
+005A	4707	mov     a, I2CData
+005B	438F	addm    a, xSize
+005C	4708	mov     a, del
+005D	5390	adcm    a, y
+005E	4709	mov     a, ptr
+005F	5391	adcm    a, ySize
+0060	470A	mov     a, Length
+0061	5392	adcm    a, color
+				L0062:
+0062	340A	clr     C
+0063	5A87	rlc     I2CData
+0064	5A88	rlc     del
+0065	5A89	rlc     ptr
+0066	5A8A	rlc     Length
+0067	340A	clr     C
+0068	5B8E	rrc     Length[4]
+0069	5B8D	rrc     Length[3]
+006A	5B8C	rrc     Length[2]
+006B	5B8B	rrc     Length[1]
+006C	470B	mov     a, Length[1]
+006D	450C	or      a, Length[2]
+006E	450D	or      a, Length[3]
+006F	450E	or      a, Length[4]
+0070	390A	snz     Z
+0071	2858	jmp     L0058
+0072	0003	ret
+				;6	const u16 VDD=5000;								//Babgap Voltage 5.00V
+000F	E213	call    1A13H
+				;7	#define	 SCL		_ph0						//e-Display SCL -> PH0
+				;8	#define	 SDA		_ph1						//e-Display SDA -> PH1
+				;9	#define	 SCLC		_phc0						//PH7
+				;10	#define	 SDAC		_phc1						//PH6
+				;11	#define	 RES		_ph2						//e-Display RES -> PH2
+				;12	#define	 RESC		_phc2
+				;13	#define	 DeviceID	(0x2D<<1)					//e-Display I2C 裝置位址
+				;14	enum { cmdASC=1,cmdRET,cmdDOT,cmdCLR,cmdPIC,	//e-Display命令定義			
+				;15		   eBUSY=0x55};
+				;16	enum { White=0xFFFF,Black=0x0000,Red=0xF800, 	//e-Display顏色定義
+				;17		   Green=0x07E0,Blue=0x001F,Yellow=0xFFE0,
+				;18		   Magenta=0xF81F,Cyanh=0x7FFF}; 
+				;19	#define pause()	GCC_DELAY(25)
+				;20	void I2C_START(void);
+				;21	void I2C_STOP(void);
+				;22	void CheckACK(void);
+				;23	void eDisplayReset(void);
+				;24	u8 e_Read(void);
+				;25	void e_Command(u8*);
+				;26	void eDisplayRet(u8,u8,u8,u8,u16);
+				;27	void eDisplayPic(u8,u8,u8,u8,const u16* );
+				;28	void eDisplayASC(u8,u8,u8*,u16);
+				;29	void VoltDisplay(u8 x,u8 y,u16 ADR,u16 color,_Bool fg);
+				;30	void e_DataRAM(u8*,u8);
+				;31	void WriteByte(u8);
+				;32	u8 ReadByte(void);
+				;33	void Delayms(u16);	
+				;34	void main()
+				;35	{	u16 ADR,ADRVBG,Volt;
+				@code .SECTION 'CODE'
+				include HT66F70A.inc
+0000	1F0B	clr     BP
+0001	2802	jmp     _main_startup1
+				@start .SECTION 'CODE'
+				_main_startup1:
+				@start .SECTION 'CODE'
+0002	0F00	mov     a, 0H
+0003	008B	mov     BP, a
+0004	2AC5	jmp     _main
+0005	7620	clr     x[4].4
+0006	6C6F	jmp     C6FH
+0007	0074	jmp     L0074
+0008	4441	xor     a, ADR[2]
+0009	2043	call    L0043
+000A	4256	sub     a, ADRVBG[14]
+000B	2047	call    L0047
+000C	6554	call    D54H
+000D	7473	clr     ADRVBG[43].0
+000E	8800	dc	08800H
+				;36		u8 i;
+				;37		_wdtc=0b10101111;							//關閉看門狗計時器
+				_main:
+				_main:
+02C5	0FAF	mov     a, AFH
+02C6	00BE	mov     WDTC, a
+				;38		eDisplayReset();							//Reset eDisplay
+02C7	22B8	call    _eDisplayReset
+				;39		eDisplayRet(0,128,0,128,Blue);				//繪製矩形區域	
+02C8	0F1F	mov     a, 1FH
+02C9	4092	mov     color, a
+02CA	5F13	clr     color[1]
+02CB	0F80	mov     a, 80H
+02CC	4091	mov     ySize, a
+02CD	5F10	clr     y
+02CE	0F80	mov     a, 80H
+02CF	408F	mov     xSize, a
+02D0	0F00	mov     a, 0H
+02D1	2264	call    _eDisplayRet
+				;40		eDisplayASC(15,5,"ADC VBG Test", Black);
+02D2	5F12	clr     color
+02D3	5F13	clr     color[1]
+02D4	0F10	mov     a, 10H
+02D5	4090	mov     y, a
+02D6	0F80	mov     a, 80H
+02D7	4091	mov     ySize, a
+02D8	0F05	mov     a, 5H
+02D9	408F	mov     xSize, a
+02DA	0F0F	mov     a, FH
+02DB	2141	call    _eDisplayASC
+				;41		_adcr1=0b01100110;							//VBGEN=1,fSYS/64,VREFS=0,ADRFS=1
+02DC	0F66	mov     a, 66H
+02DD	00E9	mov     ADCR1, a
+				;42		_pas2=0x03;									//設定PA4為AN4功能
+02DE	0F03	mov     a, 3H
+02DF	80E2	lmov    PAS2, a
+				;43		while(1)
+				;44		{	_adcr0=0x10;							//ADOFF=0,選擇VBG
+				_L45:
+02E1	0F10	mov     a, 10H
+02E2	00E8	mov     ADCR0, a
+				;45			_start=1; _start=0;						//啟動AD轉換
+02E3	33E8	set     START
+02E4	37E8	clr     START
+				;46			while(_eocb);		
+				_L41:
+02E5	3F68	sz      EOCB
+02E6	2AE5	jmp     _L41
+				;47			ADRVBG=((u16)_adrh<<8)+_adrl;			//VBG
+02E7	076B	mov     a, ADRH
+02E8	40C5	mov     ADR[6], a
+02E9	5F44	clr     ADR[5]
+02EA	076A	mov     a, ADRL
+02EB	4344	add     a, ADR[5]
+02EC	40C8	mov     ADRVBG[0], a
+02ED	1F05	clr     ACC
+02EE	5345	adc     a, ADR[6]
+02EF	40C9	mov     ADRVBG[1], a
+				;48			_adcr0=0x04;							//ADOFF=0,選擇AN4	
+02F0	0F04	mov     a, 4H
+02F1	00E8	mov     ADCR0, a
+02F2	0FC8	mov     a, C8H
+02F3	40C3	mov     ADR[4], a
+				;49			for(i=0;i<200;i++)
+				;50			{	_start=1; _start=0;					//啟動AD轉換
+				_L46:
+02F4	33E8	set     START
+02F5	37E8	clr     START
+				;51				while(_eocb);						//Wait Conversion Complete
+				_L43:
+02F6	3F68	sz      EOCB
+02F7	2AF6	jmp     _L43
+				;52				ADR=((u16)_adrh<<8)+_adrl;			//AN4				
+02F8	076B	mov     a, ADRH
+02F9	40C7	mov     ADR[8], a
+02FA	5F46	clr     ADR[7]
+02FB	076A	mov     a, ADRL
+02FC	4346	add     a, ADR[7]
+02FD	40BF	mov     ADR[0], a
+02FE	1F05	clr     ACC
+02FF	5347	adc     a, ADR[8]
+0300	40C0	mov     ADR[1], a
+				;53				VoltDisplay(20,30,ADR,Blue,0);
+0301	5F31	clr     fg
+0302	0F1F	mov     a, 1FH
+0303	40AF	mov     color, a
+0304	5F30	clr     color[1]
+0305	473F	mov     a, ADR[0]
+0306	40AD	mov     ADR, a
+0307	4740	mov     a, ADR[1]
+0308	40AE	mov     ADR[1], a
+0309	0F1E	mov     a, 1EH
+030A	40AC	mov     y, a
+030B	0F14	mov     a, 14H
+030C	21AF	call    _VoltDisplay
+				;54				Volt=((u32)ADR*VDD)>>12;			//Volt=(Result*VDD)/4096;
+030D	473F	mov     a, ADR[0]
+030E	40BF	mov     ADR[0], a
+030F	4740	mov     a, ADR[1]
+0310	40C0	mov     ADR[1], a
+0311	5F41	clr     ADR[2]
+0312	5F42	clr     ADR[3]
+0318	473F	mov     a, ADR[0]
+0319	4087	mov     I2CData, a
+031A	4740	mov     a, ADR[1]
+031B	4088	mov     del, a
+031C	4741	mov     a, ADR[2]
+031D	4089	mov     ptr, a
+031E	4742	mov     a, ADR[3]
+031F	408A	mov     Length, a
+0320	0F88	mov     a, 88H
+0321	408B	mov     Length[1], a
+0322	0F13	mov     a, 13H
+0323	408C	mov     Length[2], a
+0324	0F00	mov     a, 0H
+0325	408D	mov     Length[3], a
+0326	0F00	mov     a, 0H
+0327	408E	mov     Length[4], a
+0328	2054	call    L0054
+0329	470F	mov     a, xSize
+032A	4083	mov     rd, a
+032B	4710	mov     a, y
+032C	4084	mov     re, a
+032D	4711	mov     a, ySize
+032E	4085	mov     rf, a
+032F	4712	mov     a, color
+0330	4086	mov     rg, a
+0331	0F0C	mov     a, CH
+				_LI1:
+0332	340A	clr     C
+0333	5B86	rrc     rg
+0334	5B85	rrc     rf
+0335	5B84	rrc     re
+0336	5B83	rrc     rd
+0337	1785	sdz     ACC
+0338	2B32	jmp     _LI1
+0339	4703	mov     a, rd
+033A	40AD	mov     ADR, a
+033B	4704	mov     a, re
+033C	40AE	mov     ADR[1], a
+				;55				VoltDisplay(20,50,Volt,Red,1);
+0313	0F01	mov     a, 1H
+0314	40B1	mov     fg, a
+0315	5F2F	clr     color
+0316	0FF8	mov     a, F8H
+0317	40B0	mov     color[1], a
+033D	0F32	mov     a, 32H
+033E	40AC	mov     y, a
+033F	0F14	mov     a, 14H
+0340	21AF	call    _VoltDisplay
+				;56			
+				;57				Volt=((u32)ADR*VBG)/ADRVBG;			//Volt=(VBG*ADR2)/ADR1;
+0346	473F	mov     a, ADR[0]
+0347	4087	mov     I2CData, a
+0348	4740	mov     a, ADR[1]
+0349	4088	mov     del, a
+034A	4741	mov     a, ADR[2]
+034B	4089	mov     ptr, a
+034C	4742	mov     a, ADR[3]
+034D	408A	mov     Length, a
+034E	0FE2	mov     a, E2H
+034F	408B	mov     Length[1], a
+0350	0F04	mov     a, 4H
+0351	408C	mov     Length[2], a
+0352	0F00	mov     a, 0H
+0353	408D	mov     Length[3], a
+0354	0F00	mov     a, 0H
+0355	408E	mov     Length[4], a
+0356	2054	call    L0054
+0357	470F	mov     a, xSize
+0358	4083	mov     rd, a
+0359	4710	mov     a, y
+035A	4084	mov     re, a
+035B	4711	mov     a, ySize
+035C	4085	mov     rf, a
+035D	4712	mov     a, color
+035E	4086	mov     rg, a
+035F	5F13	clr     color[1]
+0360	4703	mov     a, rd
+0361	4087	mov     I2CData, a
+0362	4704	mov     a, re
+0363	4088	mov     del, a
+0364	4705	mov     a, rf
+0365	4089	mov     ptr, a
+0366	4706	mov     a, rg
+0367	408A	mov     Length, a
+0368	4748	mov     a, ADRVBG[0]
+0369	408B	mov     Length[1], a
+036A	4749	mov     a, ADRVBG[1]
+036B	408C	mov     Length[2], a
+036C	5F0D	clr     Length[3]
+036D	5F0E	clr     Length[4]
+036E	2011	call    L0011
+036F	4707	mov     a, I2CData
+0370	4083	mov     rd, a
+0371	4708	mov     a, del
+0372	4084	mov     re, a
+0373	4709	mov     a, ptr
+0374	4085	mov     rf, a
+0375	470A	mov     a, Length
+0376	4086	mov     rg, a
+0377	4703	mov     a, rd
+0378	40AD	mov     ADR, a
+0379	4704	mov     a, re
+037A	40AE	mov     ADR[1], a
+				;58				VoltDisplay(20,70,Volt,Blue,1);
+0341	0F01	mov     a, 1H
+0342	40B1	mov     fg, a
+0343	0F1F	mov     a, 1FH
+0344	40AF	mov     color, a
+0345	5F30	clr     color[1]
+037B	0F46	mov     a, 46H
+037C	40AC	mov     y, a
+037D	0F14	mov     a, 14H
+037E	21AF	call    _VoltDisplay
+037F	57C3	sdz     ADR[4]
+0380	2AF4	jmp     _L46
+0381	2AE1	jmp     _L45
+0382	2B82	jmp     $
+				L0C6F:
+				org	0c6fh
+0C6F	0000	nop
+				L0D54:
+				org	0d54h
+0D54	0000	nop
+				L1A13:
+				org	01a13h
+1A13	0000	nop
+				;59			}
+				;60		}
+				;61	}
+				;62	void VoltDisplay(u8 x,u8 y,u16 ADR,u16 color, _Bool fg)
+				;63	{	u8	temp[10], *ptr;
+				_VoltDisplay:
+				_VoltDisplay:
+01AF	40BC	mov     x[0], a
+				;64		ptr=temp;
+				;65		*ptr++=ADR/1000+'0'; ADR%=1000;
+01B0	472D	mov     a, ADR[0]
+01B1	4081	mov     rb, a
+01B2	472E	mov     a, ADR[1]
+01B3	4082	mov     rc, a
+01B4	5F0D	clr     Length[3]
+01B5	4701	mov     a, rb
+01B6	4087	mov     I2CData, a
+01B7	4702	mov     a, rc
+01B8	4088	mov     del, a
+01B9	0FE8	mov     a, E8H
+01BA	4089	mov     ptr, a
+01BB	0F03	mov     a, 3H
+01BC	408A	mov     Length, a
+01BD	218A	call    L018A
+01BE	4707	mov     a, I2CData
+01BF	4083	mov     rd, a
+01C0	4708	mov     a, del
+01C1	4084	mov     re, a
+01C2	4703	mov     a, rd
+01C3	0B30	add     a, 30H
+01C4	40B2	mov     temp[0], a
+01C5	5F0D	clr     Length[3]
+01C6	4701	mov     a, rb
+01C7	4087	mov     I2CData, a
+01C8	4702	mov     a, rc
+01C9	4088	mov     del, a
+01CA	0FE8	mov     a, E8H
+01CB	4089	mov     ptr, a
+01CC	0F03	mov     a, 3H
+01CD	408A	mov     Length, a
+01CE	218A	call    L018A
+01CF	470B	mov     a, Length[1]
+01D0	40BD	mov     x[1], a
+01D1	470C	mov     a, Length[2]
+01D2	40BE	mov     x[2], a
+				L01EF:
+01EF	0FAC	mov     a, ACH
+01F0	4081	mov     rb, a
+01F1	0F00	mov     a, 0H
+01F2	4082	mov     rc, a
+01F3	0F07	mov     a, 7H
+01F4	4381	addm    a, rb
+01F5	0F00	mov     a, 0H
+01F6	5382	adcm    a, rc
+				;66		if(fg)
+01D3	5E31	snz     fg[0]
+01D4	29EF	jmp     L01EF
+				;67		{	*ptr++='.';
+01D5	0F2E	mov     a, 2EH
+01D6	40B3	mov     temp[1], a
+01E6	0FAC	mov     a, ACH
+01E7	4081	mov     rb, a
+01E8	0F00	mov     a, 0H
+01E9	4082	mov     rc, a
+01EA	0F08	mov     a, 8H
+01EB	4381	addm    a, rb
+01EC	0F00	mov     a, 0H
+01ED	5382	adcm    a, rc
+01EE	29F7	jmp     L01F7
+				;68			eDisplayASC(x+40,y," volt",color);		//顯示
+01D7	473C	mov     a, x[0]
+01D8	0B28	add     a, 28H
+01D9	4080	mov     ra, a
+01DA	472F	mov     a, color[0]
+01DB	4092	mov     color, a
+01DC	4730	mov     a, color[1]
+01DD	4093	mov     color[1], a
+01DE	0F0A	mov     a, AH
+01DF	4090	mov     y, a
+01E0	0F80	mov     a, 80H
+01E1	4091	mov     ySize, a
+01E2	472C	mov     a, y[0]
+01E3	408F	mov     xSize, a
+01E4	4700	mov     a, ra
+01E5	2141	call    _eDisplayASC
+				;69		}
+				;70		*ptr++=ADR/100+'0'; ADR%=100;
+				L01F7:
+01F7	5F0D	clr     Length[3]
+01F8	473D	mov     a, x[1]
+01F9	4087	mov     I2CData, a
+01FA	473E	mov     a, x[2]
+01FB	4088	mov     del, a
+01FC	0F64	mov     a, 64H
+01FD	4089	mov     ptr, a
+01FE	5F0A	clr     Length
+01FF	218A	call    L018A
+0200	4707	mov     a, I2CData
+0201	4083	mov     rd, a
+0202	4708	mov     a, del
+0203	4084	mov     re, a
+0204	0F30	mov     a, 30H
+0205	4383	addm    a, rd
+0206	4701	mov     a, rb
+0207	0083	mov     MP1L, a
+0208	4702	mov     a, rc
+0209	0084	mov     MP1H, a
+020A	4703	mov     a, rd
+020B	0082	mov     [02H], a
+020C	5F0D	clr     Length[3]
+020D	473D	mov     a, x[1]
+020E	4087	mov     I2CData, a
+020F	473E	mov     a, x[2]
+0210	4088	mov     del, a
+0211	0F64	mov     a, 64H
+0212	4089	mov     ptr, a
+0213	5F0A	clr     Length
+0214	218A	call    L018A
+0215	470B	mov     a, Length[1]
+0216	4083	mov     rd, a
+0217	470C	mov     a, Length[2]
+0218	4084	mov     re, a
+				;71		*ptr++=ADR/10+'0'; *ptr++=ADR%10+'0';
+0219	5F0D	clr     Length[3]
+021A	4703	mov     a, rd
+021B	4087	mov     I2CData, a
+021C	4704	mov     a, re
+021D	4088	mov     del, a
+021E	0F0A	mov     a, AH
+021F	4089	mov     ptr, a
+0220	5F0A	clr     Length
+0221	218A	call    L018A
+0222	4707	mov     a, I2CData
+0223	4085	mov     rf, a
+0224	4708	mov     a, del
+0225	4086	mov     rg, a
+0226	0F30	mov     a, 30H
+0227	4385	addm    a, rf
+0228	0F01	mov     a, 1H
+0229	4301	add     a, rb
+022A	0083	mov     MP1L, a
+022B	0F00	mov     a, 0H
+022C	5302	adc     a, rc
+022D	0084	mov     MP1H, a
+022E	4705	mov     a, rf
+022F	0082	mov     [02H], a
+0230	5F0D	clr     Length[3]
+0231	4703	mov     a, rd
+0232	4087	mov     I2CData, a
+0233	4704	mov     a, re
+0234	4088	mov     del, a
+0235	0F0A	mov     a, AH
+0236	4089	mov     ptr, a
+0237	5F0A	clr     Length
+0238	218A	call    L018A
+0239	470B	mov     a, Length[1]
+023A	4083	mov     rd, a
+023B	470C	mov     a, Length[2]
+023C	4084	mov     re, a
+023D	0F30	mov     a, 30H
+023E	4383	addm    a, rd
+023F	0F02	mov     a, 2H
+0240	4301	add     a, rb
+0241	0083	mov     MP1L, a
+0242	0F00	mov     a, 0H
+0243	5302	adc     a, rc
+0244	0084	mov     MP1H, a
+0245	4703	mov     a, rd
+0246	0082	mov     [02H], a
+				;72		*ptr=0;
+0247	0F03	mov     a, 3H
+0248	4301	add     a, rb
+0249	0083	mov     MP1L, a
+024A	0F00	mov     a, 0H
+024B	5302	adc     a, rc
+024C	0084	mov     MP1H, a
+024D	0F00	mov     a, 0H
+024E	0082	mov     [02H], a
+				;73		eDisplayASC(x,y,temp,color);				//顯示
+024F	473C	mov     a, x[0]
+0250	4080	mov     ra, a
+0251	472F	mov     a, color[0]
+0252	4092	mov     color, a
+0253	4730	mov     a, color[1]
+0254	4093	mov     color[1], a
+0255	0FAC	mov     a, ACH
+0256	4081	mov     rb, a
+0257	0F00	mov     a, 0H
+0258	4082	mov     rc, a
+0259	0F06	mov     a, 6H
+025A	4301	add     a, rb
+025B	4090	mov     y, a
+025C	0F00	mov     a, 0H
+025D	5302	adc     a, rc
+025E	4091	mov     ySize, a
+025F	472C	mov     a, y[0]
+0260	408F	mov     xSize, a
+0261	4700	mov     a, ra
+0262	2141	call    _eDisplayASC
+0263	0003	ret
+				;74	}
+				;75	void eDisplayReset(void)
+				;76	{	RES=0; RESC=0;
+				_eDisplayReset:
+				_eDisplayReset:
+02B8	352E	clr     PH2
+02B9	352F	clr     PHC2
+				;77		Delayms(10);
+02BA	0F0A	mov     a, AH
+02BB	4088	mov     del, a
+02BC	5F09	clr     ptr
+02BD	22A3	call    _Delayms
+				;78		RES=1;
+02BE	312E	set     PH2
+				;79		Delayms(3000);
+02BF	0FB8	mov     a, B8H
+02C0	4088	mov     del, a
+02C1	0F0B	mov     a, BH
+02C2	4089	mov     ptr, a
+02C3	22A3	call    _Delayms
+02C4	0003	ret
+				;80	}
+				;81	void eDisplayClear(u8 x,u8 xSize,u8 y,u8 ySize)
+				;82	{	u8 Buffer[8]={cmdCLR,0,4,0,0,0,0,0};			//裝載命令
+				;83		e_Command(Buffer);								//送出e-Display清除命令
+				;84		Buffer[0]=x; Buffer[1]=xSize;					//裝載參數
+				;85		Buffer[2]=y; Buffer[3]=ySize;
+				;86		e_DataRAM(Buffer,4);							//送出x/y座標起點及長度
+				;87		I2C_STOP();										//送出I2C STOP信號 
+				;88	}
+				;89	void eDisplayASC(u8 x, u8 y,u8 *ptr, u16 color)
+				;90	{	u8 i=6,Buffer[22];
+				_eDisplayASC:
+				_eDisplayASC:
+0141	40AA	mov     x[0], a
+0142	0F06	mov     a, 6H
+0143	40AB	mov     i[0], a
+				;91		while(*ptr) {Buffer[i]=*ptr++;i++;};
+0144	0F8F	mov     a, 8FH
+0145	4081	mov     rb, a
+0146	0F00	mov     a, 0H
+0147	4082	mov     rc, a
+0148	0F05	mov     a, 5H
+0149	4381	addm    a, rb
+014A	0F00	mov     a, 0H
+014B	5382	adcm    a, rc
+				L014C:
+014C	4710	mov     a, ptr[0]
+014D	0083	mov     MP1L, a
+014E	4711	mov     a, ptr[1]
+014F	0084	mov     MP1H, a
+0150	20B7	call    L00B7
+0151	4080	mov     ra, a
+0152	5E00	snz     ra
+0153	2961	jmp     L0161
+0154	5490	inc     ptr[0]
+0155	3D0A	sz      Z
+0156	5491	inc     ptr[1]
+0157	472B	mov     a, i[0]
+0158	4301	add     a, rb
+0159	0083	mov     MP1L, a
+015A	1F05	clr     ACC
+015B	5302	adc     a, rc
+015C	0084	mov     MP1H, a
+015D	4700	mov     a, ra
+015E	0082	mov     [02H], a
+015F	54AB	inc     i[0]
+0160	294C	jmp     L014C
+				;92		Buffer[0]=cmdASC; Buffer[1]=0; Buffer[2]=i;		//裝載命令
+				L0161:
+0161	0F01	mov     a, 1H
+0162	4094	mov     Buffer[0], a
+0163	5F15	clr     Buffer[1]
+0164	472B	mov     a, i[0]
+0165	4096	mov     Buffer[2], a
+				;93		e_Command(Buffer);								//送出命令
+0166	0F8F	mov     a, 8FH
+0167	4080	mov     ra, a
+0168	0F00	mov     a, 0H
+0169	4081	mov     rb, a
+016A	0F05	mov     a, 5H
+016B	4300	add     a, ra
+016C	4089	mov     ptr, a
+016D	0F00	mov     a, 0H
+016E	5301	adc     a, rb
+016F	408A	mov     Length, a
+0170	211C	call    _L23
+				;94		Buffer[0]=x; Buffer[1]=y;						//裝載參數
+0171	472A	mov     a, x[0]
+0172	4094	mov     Buffer[0], a
+0173	470F	mov     a, y[0]
+0174	4095	mov     Buffer[1], a
+				;95		Buffer[2]=color>>8;	Buffer[3]=(u8)color;
+0175	4713	mov     a, color[1]
+0176	4096	mov     Buffer[2], a
+0177	4712	mov     a, color[0]
+0178	4097	mov     Buffer[3], a
+				;96		Buffer[4]=0xFF;	Buffer[5]=0xFF;
+0179	5F98	set     Buffer[4]
+017A	5F99	set     Buffer[5]
+				;97		e_DataRAM(Buffer,i);							//送出參數
+017B	472B	mov     a, i[0]
+017C	408A	mov     Length, a
+017D	0F8F	mov     a, 8FH
+017E	4080	mov     ra, a
+017F	0F00	mov     a, 0H
+0180	4081	mov     rb, a
+0181	0F05	mov     a, 5H
+0182	4300	add     a, ra
+0183	4088	mov     del, a
+0184	0F00	mov     a, 0H
+0185	5301	adc     a, rb
+0186	4089	mov     ptr, a
+0187	20C4	call    _e_DataRAM
+				;98		I2C_STOP();										//送出I2C STOP信號 
+0188	2073	call    _I2C_STOP
+0189	0003	ret
+				L018A:
+018A	5F0B	clr     Length[1]
+018B	5F0C	clr     Length[2]
+018C	0F10	mov     a, 10H
+018D	408E	mov     Length[4], a
+				L018E:
+018E	340A	clr     C
+018F	5A87	rlc     I2CData
+0190	5A88	rlc     del
+0191	5A8B	rlc     Length[1]
+0192	5A8C	rlc     Length[2]
+0193	470B	mov     a, Length[1]
+0194	4209	sub     a, ptr
+0195	470C	mov     a, Length[2]
+0196	520A	sbc     a, Length
+0197	380A	snz     C
+0198	299E	jmp     L019E
+0199	408C	mov     Length[2], a
+019A	470B	mov     a, Length[1]
+019B	4209	sub     a, ptr
+019C	408B	mov     Length[1], a
+019D	5487	inc     I2CData
+				L019E:
+019E	578E	sdz     Length[4]
+019F	298E	jmp     L018E
+01A0	780D	snz     Length[3].0
+01A1	29A7	jmp     L01A7
+01A2	418B	cpl     Length[1]
+01A3	418C	cpl     Length[2]
+01A4	548B	inc     Length[1]
+01A5	3D0A	sz      Z
+01A6	548C	inc     Length[2]
+				L01A7:
+01A7	788D	snz     Length[3].1
+01A8	29AE	jmp     L01AE
+01A9	4187	cpl     I2CData
+01AA	4188	cpl     del
+01AB	5487	inc     I2CData
+01AC	3D0A	sz      Z
+01AD	5488	inc     del
+				L01AE:
+01AE	0003	ret
+				;99	}
+				;100	void eDisplayRet(u8 x, u8 xSize,u8 y, u8 ySize, u16 color)
+				;101	{	u8 Buffer[8]={cmdRET,0,6,0,0,0,0,0};		//裝載命令
+				_eDisplayRet:
+				_eDisplayRet:
+0264	409C	mov     x[0], a
+0265	0F02	mov     a, 2H
+0266	4094	mov     Buffer[0], a
+0267	5F15	clr     Buffer[1]
+0268	0F06	mov     a, 6H
+0269	4096	mov     Buffer[2], a
+026A	5F17	clr     Buffer[3]
+026B	5F18	clr     Buffer[4]
+026C	5F19	clr     Buffer[5]
+026D	5F1A	clr     Buffer[6]
+026E	5F1B	clr     Buffer[7]
+				;102		e_Command(Buffer);							//送出命令
+026F	0F8F	mov     a, 8FH
+0270	4080	mov     ra, a
+0271	0F00	mov     a, 0H
+0272	4081	mov     rb, a
+0273	0F05	mov     a, 5H
+0274	4300	add     a, ra
+0275	4089	mov     ptr, a
+0276	0F00	mov     a, 0H
+0277	5301	adc     a, rb
+0278	408A	mov     Length, a
+0279	211C	call    _L23
+				;103		Buffer[0]=x; Buffer[1]=xSize;				//裝載參數
+027A	471C	mov     a, x[0]
+027B	4094	mov     Buffer[0], a
+027C	470F	mov     a, xSize[0]
+027D	4095	mov     Buffer[1], a
+				;104		Buffer[2]=y; Buffer[3]=ySize;
+027E	4710	mov     a, y[0]
+027F	4096	mov     Buffer[2], a
+0280	4711	mov     a, ySize[0]
+0281	4097	mov     Buffer[3], a
+				;105		Buffer[4]=color>>8;	Buffer[5]=(u8)color;	
+0282	4713	mov     a, color[1]
+0283	4098	mov     Buffer[4], a
+0284	4712	mov     a, color[0]
+0285	4099	mov     Buffer[5], a
+				;106		e_DataRAM(Buffer,6);						//送出參數
+0286	0F06	mov     a, 6H
+0287	408A	mov     Length, a
+0288	0F8F	mov     a, 8FH
+0289	4080	mov     ra, a
+028A	0F00	mov     a, 0H
+028B	4081	mov     rb, a
+028C	0F05	mov     a, 5H
+028D	4300	add     a, ra
+028E	4088	mov     del, a
+028F	0F00	mov     a, 0H
+0290	5301	adc     a, rb
+0291	4089	mov     ptr, a
+0292	20C4	call    _e_DataRAM
+				;107		I2C_STOP();									//送出I2C STOP信號 
+0293	2073	call    _I2C_STOP
+0294	0003	ret
+0295	0000	nop
+0296	0000	nop
+0297	0000	nop
+0298	0000	nop
+				L0299:
+0299	0000	nop
+				L029A:
+029A	0000	nop
+029B	1785	sdz     ACC
+029C	2A9A	jmp     L029A
+				L029D:
+029D	0000	nop
+029E	1785	sdz     ACC
+029F	2A9D	jmp     L029D
+02A0	5787	sdz     I2CData
+02A1	2A9D	jmp     L029D
+02A2	0003	ret
+				;108	}
+				;109	void e_Command(u8* ptr)
+				;110	{	u8 i;
+				;111		while(e_Read()==eBUSY); 						//檢查e-Display忙碌狀態	
+				_L23:
+				_e_Command:
+				_e_Command:
+011C	2109	call    _e_Read
+011D	4080	mov     ra, a
+011E	4700	mov     a, ra
+011F	0A55	sub     a, 55H
+0120	3D0A	sz      Z
+0121	291C	jmp     _L23
+				;112		I2C_START();
+0122	20E0	call    _I2C_START
+				;113		WriteByte(DeviceID|0); CheckACK();				//送出DeviceID_W並等待回應ACK
+0123	0F5A	mov     a, 5AH
+0124	208A	call    _WriteByte
+0125	207A	call    _CheckACK
+0126	4709	mov     a, ptr[0]
+0127	408B	mov     Length[1], a
+0128	470A	mov     a, ptr[1]
+0129	408C	mov     Length[2], a
+012A	0F08	mov     a, 8H
+012B	430B	add     a, Length[1]
+012C	408D	mov     Length[3], a
+012D	0F00	mov     a, 0H
+012E	530C	adc     a, Length[2]
+012F	408E	mov     Length[4], a
+				;114		for(i=0;i<8;i++)								//e-Display命令長度固定為8
+013A	470B	mov     a, Length[1]
+013B	420D	sub     a, Length[3]
+013C	470C	mov     a, Length[2]
+013D	520E	sbc     a, Length[4]
+013E	3B0A	snz     CZ
+013F	2930	jmp     _L25
+0140	0003	ret
+				;115		{	WriteByte(*ptr++); CheckACK();				//逐Byte送出命令並等待回應ACK
+				_L25:
+0130	470B	mov     a, Length[1]
+0131	0083	mov     MP1L, a
+0132	470C	mov     a, Length[2]
+0133	0084	mov     MP1H, a
+0134	20B7	call    L00B7
+0135	208A	call    _WriteByte
+0136	207A	call    _CheckACK
+0137	548B	inc     Length[1]
+0138	3D0A	sz      Z
+0139	548C	inc     Length[2]
+				;116		}
+				;117	}
+				;118	void e_DataRAM(u8* ptr,u8 Length)
+				;119	{	u8 i;
+				_e_DataRAM:
+				_e_DataRAM:
+00C4	4708	mov     a, ptr[0]
+00C5	408B	mov     Length[1], a
+00C6	4709	mov     a, ptr[1]
+00C7	408C	mov     Length[2], a
+00C8	470A	mov     a, Length[0]
+00C9	430B	add     a, Length[1]
+00CA	408D	mov     Length[3], a
+00CB	1F05	clr     ACC
+00CC	530C	adc     a, Length[2]
+00CD	408E	mov     Length[4], a
+				;120		for(i=0;i<Length;i++)
+00CE	28D9	jmp     _L11
+				_L11:
+00D9	470B	mov     a, Length[1]
+00DA	420D	sub     a, Length[3]
+00DB	470C	mov     a, Length[2]
+00DC	520E	sbc     a, Length[4]
+00DD	3B0A	snz     CZ
+00DE	28CF	jmp     _L12
+00DF	0003	ret
+				;121		{	WriteByte(*ptr++); CheckACK();				//逐Byte送出RAM資料並等待回應ACK
+				_L12:
+00CF	470B	mov     a, Length[1]
+00D0	0083	mov     MP1L, a
+00D1	470C	mov     a, Length[2]
+00D2	0084	mov     MP1H, a
+00D3	20B7	call    L00B7
+00D4	208A	call    _WriteByte
+00D5	207A	call    _CheckACK
+00D6	548B	inc     Length[1]
+00D7	3D0A	sz      Z
+00D8	548C	inc     Length[2]
+				;122		}
+				;123	}
+				;124	u8 e_Read(void)
+				;125	{	u8 retval;
+				;126		I2C_START();									//送出I2C START信號 
+				_e_Read:
+				_e_Read:
+0109	20E0	call    _I2C_START
+				;127		WriteByte(DeviceID|1); CheckACK();				//送出DeviceID_R並等待回應ACK
+010A	0F5B	mov     a, 5BH
+010B	208A	call    _WriteByte
+010C	207A	call    _CheckACK
+				;128		retval=ReadByte();								//讀取裝置回傳值
+010D	20EF	call    _ReadByte
+010E	4088	mov     retval[0], a
+				;129		SDA=1; SDAC=0; 									//送出NO_ACK信號
+010F	30AE	set     PH1
+0110	34AF	clr     PHC1
+				;130		SCL=1; pause(); SCL=0; 	
+0111	302E	set     PH0
+0112	0F04	mov     a, 4H
+0113	340B	clr     BP0
+0114	348B	clr     BP1
+0115	2085	call    L0085
+0116	348B	clr     BP1
+0117	340B	clr     BP0
+0118	342E	clr     PH0
+				;131		I2C_STOP();										//送出I2C STOP信號
+0119	2073	call    _I2C_STOP
+				;132		return retval;
+				;133	}
+011A	4708	mov     a, retval[0]
+011B	0003	ret
+				;134	void I2C_START(void)
+				;135	{	SCL=0; SDA=0;									//設定 SCL=0, SDA=0
+				_I2C_START:
+				_I2C_START:
+00E0	342E	clr     PH0
+00E1	34AE	clr     PH1
+				;136		SCLC=0; SDAC=0; 					   			//SCL/SDA為輸出模式
+00E2	342F	clr     PHC0
+00E3	34AF	clr     PHC1
+				;137		SCL=1; SDA=1; pause();							//SCL=1, SDA=1
+00E4	302E	set     PH0
+00E5	30AE	set     PH1
+00E6	0F04	mov     a, 4H
+00E7	340B	clr     BP0
+00E8	348B	clr     BP1
+00E9	2085	call    L0085
+00EA	348B	clr     BP1
+00EB	340B	clr     BP0
+				;138		SDA=0;											//SDA=0 			     						
+00EC	34AE	clr     PH1
+				;139		SCL=0;								      		//SCL=0	
+00ED	342E	clr     PH0
+00EE	0003	ret
+				;140	}
+				;141	void I2C_STOP(void)
+				;142	{	SCL=0; SDA=0;									//設定 SCL=0, SDA=0
+				_I2C_STOP:
+				_I2C_STOP:
+0073	342E	clr     PH0
+				L0074:
+0074	34AE	clr     PH1
+				;143		SDAC=0;								   			//SDA 為輸出模式
+0075	34AF	clr     PHC1
+				;144		SCL=1;								      		//SCL=1
+0076	302E	set     PH0
+				;145		SDA=1;								    		//SDA=1
+0077	30AE	set     PH1
+				;146		SCL=0; 											//SCL=0	
+0078	342E	clr     PH0
+0079	0003	ret
+				;147	}
+				;148	void CheckACK(void)
+				;149	{	SDAC=1;							     			//SDA 為輸入模式
+				_CheckACK:
+				_CheckACK:
+007A	30AF	set     PHC1
+				;150		SCL=1; 							     			//設定 SCL=1,
+007B	302E	set     PH0
+				;151		while(SDA);										//等待 ACK(Low)
+				_L5:
+007C	3CAE	sz      PH1
+007D	287C	jmp     _L5
+				;152		SCL=0;					   						//設定 SCL=0
+007E	342E	clr     PH0
+007F	0003	ret
+0080	0000	nop
+0081	0000	nop
+0082	0000	nop
+0083	0000	nop
+0084	0000	nop
+				L0085:
+0085	0000	nop
+				L0086:
+0086	0000	nop
+0087	1785	sdz     ACC
+0088	2886	jmp     L0086
+0089	0003	ret
+				;153	}
+				;154	void WriteByte(u8 I2CData)
+				;155	{	u8 temp=0b10000000;
+				_WriteByte:
+				_WriteByte:
+008A	4087	mov     I2CData[0], a
+008E	0F80	mov     a, 80H
+008F	4081	mov     rb, a
+				;156		SCL=0; SDAC=0;									//SCL=0, SDA為輸出模式
+008B	342E	clr     PH0
+008C	34AF	clr     PHC1
+008D	5F00	clr     ra
+				;157		do								
+				;158		{	SDA=(I2CData & temp)?1:0; pause();			//設定 SDA 準位
+				L0090:
+0090	4701	mov     a, rb
+0091	4607	and     a, I2CData[0]
+0092	4082	mov     rc, a
+0093	0F00	mov     a, 0H
+0094	4202	sub     a, rc
+0095	4083	mov     rd, a
+0096	4703	mov     a, rd
+0097	4582	orm     a, rc
+0098	5A82	rlc     rc
+0099	5F02	clr     rc
+009A	5A82	rlc     rc
+009B	4702	mov     a, rc
+009C	4382	addm    a, rc
+009D	34AE	clr     PH1
+009E	4702	mov     a, rc
+009F	05AE	orm     a, PH
+00A0	0F04	mov     a, 4H
+00A1	340B	clr     BP0
+00A2	348B	clr     BP1
+00A3	2085	call    L0085
+00A4	348B	clr     BP1
+00A5	340B	clr     BP0
+				;159			SCL=1; pause(); SCL=0;    					//產生 SCL Clock
+00A6	302E	set     PH0
+00A7	0F04	mov     a, 4H
+00A8	340B	clr     BP0
+00A9	348B	clr     BP1
+00AA	2085	call    L0085
+00AB	348B	clr     BP1
+00AC	340B	clr     BP0
+00AD	342E	clr     PH0
+				;160			temp>>=1;									//下一位元
+00AE	340A	clr     C
+00AF	5B81	rrc     rb
+00B0	5480	inc     ra
+				;161		} while (temp!=0);								//傳送8個位元
+00B1	4700	mov     a, ra
+00B2	0A08	sub     a, 8H
+00B3	390A	snz     Z
+00B4	2890	jmp     L0090
+00B5	0003	ret
+00B6	1483	inc     MP1L
+				L00B7:
+00B7	3F84	sz      MP1H.7
+00B8	28BB	jmp     L00BB
+00B9	0702	mov     a, [02H]
+00BA	0003	ret
+				L00BB:
+00BB	1B04	rrca    MP1H
+00BC	0E3F	and     a, 3FH
+00BD	0089	mov     TBHP, a
+00BE	1B03	rrca    MP1L
+00BF	0087	mov     TBLP, a
+00C0	1D05	tabrd   ACC
+00C1	3C0A	sz      C
+00C2	0708	mov     a, TBLH
+00C3	0003	ret
+				;162	}
+				;163	u8 ReadByte(void)
+				;164	{	u8 I2CData=0, temp=0b10000000;
+00F1	0F80	mov     a, 80H
+00F2	4082	mov     rc, a
+00F3	5F00	clr     ra
+				;165		SDAC=1;							 				//設定 SDA 為輸入模式
+				_ReadByte:
+				_ReadByte:
+00EF	30AF	set     PHC1
+00F0	5F01	clr     rb
+				;166		do
+				;167		{	SCL=1; pause();								//設定 SCL=1
+				_L16:
+00F4	302E	set     PH0
+00F5	0F04	mov     a, 4H
+00F6	340B	clr     BP0
+00F7	348B	clr     BP1
+00F8	2085	call    L0085
+00F9	348B	clr     BP1
+00FA	340B	clr     BP0
+				;168			if(SDA) I2CData|=temp;						//接收位元值
+00FB	38AE	snz     PH1
+00FC	28FF	jmp     _L14
+00FD	4702	mov     a, rc
+00FE	4580	orm     a, ra
+				;169			SCL=0;										//設定 SCL=0
+				_L14:
+00FF	342E	clr     PH0
+				;170			temp>>=1;									//下一位元
+0100	340A	clr     C
+0101	5B82	rrc     rc
+0102	5481	inc     rb
+				;171		} while (temp!=0);								//接收8個位元
+0103	4701	mov     a, rb
+0104	0A08	sub     a, 8H
+0105	390A	snz     Z
+0106	28F4	jmp     _L16
+				;172		return I2CData;
+				;173	}
+0107	4700	mov     a, ra
+0108	0003	ret
+				;174	void Delayms(u16 del)								//@fSYS=8MH,延遲del*ms				
+				;175	{	u16 i;							
+				;176		for(i=0;i<del;i++) GCC_DELAY(2000);				//延遲del*2000指令週期			
+				_Delayms:
+				_Delayms:
+02A3	5F01	clr     rb
+02A4	5F02	clr     rc
+02A5	2AB1	jmp     _L36
+				_L37:
+02A6	0F01	mov     a, 1H
+02A7	4087	mov     I2CData, a
+02A8	0FF1	mov     a, F1H
+02A9	340B	clr     BP0
+02AA	348B	clr     BP1
+02AB	2299	call    L0299
+02AC	348B	clr     BP1
+02AD	340B	clr     BP0
+02AE	5481	inc     rb
+02AF	3D0A	sz      Z
+02B0	5482	inc     rc
+				_L36:
+02B1	4701	mov     a, rb
+02B2	4208	sub     a, del[0]
+02B3	4702	mov     a, rc
+02B4	5209	sbc     a, del[1]
+02B5	3B0A	snz     CZ
+02B6	2AA6	jmp     _L37
+02B7	0003	ret
+				;177	}
+				data .SECTION 'DATA'
+				__ph DB DUP (?) ; __ph
+				__phc DB DUP (?) ; __phc
+				__wdtc DB DUP (?) ; __wdtc
+				__adcr0 DB DUP (?) ; __adcr0
+				__adcr1 DB DUP (?) ; __adcr1
+				__adrl DB DUP (?) ; __adrl
+				__adrh DB DUP (?) ; __adrh
+				ra DB DUP (?)
+				rb DB DUP (?)
+				rc DB DUP (?)
+				rd DB DUP (?)
+				re DB DUP (?)
+				rf DB DUP (?)
+				rg DB DUP (?)
+				I2CData DB DUP (?) ; I2CData
+				del DB 2 DUP (?) ; del
+				ptr DB DUP (?) ; ptr
+				Length DB DUP (?) ; Length
+				xSize DB DUP (?) ; xSize
+				y DB DUP (?) ; y
+				ySize DB DUP (?) ; ySize
+				color DB 2 DUP (?) ; color
+				Buffer DB DUP (?) ; Buffer
+				x DB DUP (?) ; x
+				x DB DUP (?) ; x
+				i DB DUP (?) ; i
+				y DB DUP (?) ; y
+				ADR DB 2 DUP (?) ; ADR
+				color DB 2 DUP (?) ; color
+				fg DB DUP (?) ; fg
+				temp DB DUP (?) ; temp
+				x DB DUP (?) ; x
+				ADR DB 2 DUP (?) ; ADR
+				ADRVBG DB 2 DUP (?) ; ADRVBG
+				__pas2 DB DUP (?) ; __pas2

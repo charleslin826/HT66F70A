@@ -1,0 +1,62 @@
+"File: Lab01_03.asm  Assembler  Version 2.97      Page 1
+
+
+   1  0000              ; PROGRAM : Lab01_03.ASM  	        			By Steven                    
+   2  0000              ; FUNCTION: LED SCANNING DEMO PROGRAM           2017.0512      		  
+   3  0000              ;加上自己的定義，若要日後要修改，方便多了～
+   4  0000              #INCLUDE    HT66F70A.INC 
+
+
+   5  0000              LED_PORT  	EQU    PC        			;DEFINE LED_PORT(PC0~PC7) 
+   6  0000              LED_PORTC  	EQU    PCC        			;DEFINE LED_PORT CONTROL REG.  
+   7  0000              ;=================================================================================
+   8  0000              MY_DATA    .SECTION		'DATA'          ;== DATA SECTION == 
+   9  0000  00          DEL1    DB       ?                  	;DELAY LOOP COUNT 1 
+  10  0001  00          DEL2    DB       ?                  	;DELAY LOOP COUNT 2 
+  11  0002  00          DEL3	DB   	 ?        				;DELAY LOOP COUNT 3 
+  12  0003              ;========================================================================================
+  13  0000              MY_CODE    .SECTION	 at 0	'CODE'     	;== PROGRAM SECTION == 
+  14  0000              MAIN: 
+  15  0000  0FAF        		MOV		A,0AFh					;DISABLE WDT
+  16  0001  00BE        		MOV		WDTC,A
+  17  0002  1F1B        		CLR		LED_PORTC          		;CONFIG LED_PORT AS O/P MODE 
+  18  0003              ;		SET		LED_PORT           		;SET INITIAL LED STATE 1111 1111
+  19  0003              ;		CLR		C                  		;SET CARRY FLAG (STATUS.0) 
+  20  0003  0F7F        		MOV		A,07Fh   				;SET 0111 1111 (07Fh) to A(temp)
+  21  0004  009A        		MOV		LED_PORT,A				;SET A(temp) to LED_PORT(PC0~PC7)
+  22  0005              RIGHT:             
+  23  0005  199A        		RR		LED_PORT        		;SHIFT RIGHT 
+  24  0006  0F64        		MOV 	A,100         			;SET DELAY FACTOR 
+  25  0007  2010        		CALL	DELAY               	;DELAY 100*1mS 
+  26  0008  3C1A        		SZ  	LED_PORT.0          	;IS ALL LEDs HAVE BEEN LIT? 
+  27  0009  2805        		JMP		RIGHT               	;NO. CONTINUE RIGHT SHIFT. 
+  28  000A              LEFT:   
+  29  000A  189A        		RL     LED_PORT    			;SHIFT LEFT 
+  30  000B  0FC8        		MOV		A,200         			;SET DALAY FACTOR 
+  31  000C  2010        		CALL	DELAY               	;DELAY 200*1mS 
+  32  000D  3F9A        		SZ		LED_PORT.7          	;IS ALL LEDs HAVE BEEN LIT? 
+  33  000E  280A        		JMP		LEFT                	;NO. CONTINUE LEFT SHIFT. 
+  34  000F  2805        		JMP		RIGHT               	;REPEAT THE RIGHT PROCESS. 
+  35  0010              ;========================================================================================
+  36  0010              ; PROC	: DELAY
+  37  0010              ; FUNC	: DEALY ABOUT ACC*1mS @fSYS=8MHz  (1996×Acc)+2 Cycles!
+  38  0010              ; PARA	: ACC : DELAY FACTOR
+  39  0010              ; REG	: DEL1,DEL2,DEL3
+  40  0010              ;======================================================================================== 
+  41  0010              DELAY  	PROC
+  42  0010  0080     R  		MOV		DEL1,A					;SET DEL1 COUNTER	
+  43  0011  0F03        DEL_1:  MOV		A,3		        	                   	
+  44  0012  0080     R          MOV		DEL2,A					;SET DEL2 COUNTER 
+  45  0013  0FDC        DEL_2:	MOV		A,220
+  46  0014  0080     R  		MOV		DEL3,A					;SET DEL3 COUNTER
+  47  0015  1780     R  DEL_3:  SDZ		DEL3                  	;DEL3 DOWN COUNT
+  48  0016  2815                JMP		DEL_3                      
+  49  0017  1780     R          SDZ		DEL2                  	;DEL2 DOWN COUNT
+  50  0018  2813                JMP		DEL_2                   
+  51  0019  1780     R  		SDZ		DEL1					;DEL1 DOWN COUNT
+  52  001A  2811        		JMP		DEL_1
+  53  001B  0003                RET
+  54  001C              DELAY	ENDP
+
+
+        0 Errors, 0 Warnings

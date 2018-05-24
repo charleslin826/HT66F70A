@@ -1,0 +1,48 @@
+"File: IAR.asm       Assembler  Version 2.97      Page 1
+
+
+   1  0000              ; PROGRAM : IAR.ASM  		        				By Steven                    
+   2  0000              ; FUNCTION: Indirect Addressing DEMO PROGRAM        2017.0512      		  
+   3  0000              #INCLUDE    HT66F70A.INC 
+
+
+   4  0000              ;=================================================================================
+   5  0000              MY_DATA    .SECTION		'DATA'          ;== DATA SECTION == 
+   6  0000  0080[       Array1		DB 128 dup(?)        		;Reserve 128 Byte with Start Address -> Array 
+            00
+            ]
+   7  0080              RAMBANK 2  	MY_DATABack
+   8  0000              MY_DATABack .SECTION	'DATA'          ;== DATA SECTION == 
+   9  0000  0080[       Array2		DB 128 dup(?)        		;Reserve 128 Byte with Start Address -> Array 
+            00
+            ]
+  10  0080              ;========================================================================================
+  11  0000              MY_CODE    .SECTION	 at 0	'CODE'     	;== PROGRAM SECTION == 
+  12  0000              MAIN:
+  13  0000  0FAF        		MOV		A,0AFh					;DISABLE WDT
+  14  0001  00BE        		MOV		WDTC,A
+  15  0002  0F00     R  		MOV		a,OFFSET Array1			;MP0永遠僅指向BANK0
+  16  0003  0081        		MOV		MP0,A
+  17  0004  0F80        		MOV		a,128
+  18  0005              LOOP1:		
+  19  0005  1F00        		CLR		IAR0					;將MP0所指向的位址內容清為0
+  20  0006  1481        		INC		MP0
+  21  0007  1785        		SDZ		ACC
+  22  0008  2805        		JMP		LOOP1
+  23  0009              ;=======================================================================		
+  24  0009  0F00     R  		MOV		A,Low OFFSET Array2		;斷點1
+  25  000A  0083        		MOV		MP1L,A					
+  26  000B  0F00     R  		MOV		A,OFFSET Array2
+  27  000C  0084        		MOV		MP1H,A		
+  28  000D  0F80        		MOV		a,128
+  29  000E              LOOP2:		
+  30  000E  1F82        		SET		IAR1					;將MP1所指向的位址內容設為FF
+  31  000F  1483        		INC		MP1L
+  32  0010  1785        		SDZ		ACC
+  33  0011  280E        		JMP		LOOP2
+  34  0012  2812        		JMP		$						;斷點2					
+  35  0013              ;=======================================================================		
+  36  0013              		END
+
+
+        0 Errors, 0 Warnings
